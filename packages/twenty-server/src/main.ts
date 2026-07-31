@@ -18,7 +18,6 @@ import { getSessionStorageOptions } from 'src/engine/core-modules/session-storag
 import { TwentyConfigService } from 'src/engine/core-modules/twenty-config/twenty-config.service';
 import { configTransformers } from 'src/engine/core-modules/twenty-config/utils/config-transformers.util';
 import { shouldCaptureException } from 'src/engine/utils/global-exception-handler.util';
-import { UnhandledExceptionFilter } from 'src/filters/unhandled-exception.filter';
 
 import { AppModule } from './app.module';
 import './instrument';
@@ -76,8 +75,6 @@ const bootstrap = async () => {
   // Use our logger
   app.useLogger(logger);
 
-  app.useGlobalFilters(new UnhandledExceptionFilter());
-
   app.useBodyParser('json', { limit: settings.storage.maxFileSize });
   app.useBodyParser('urlencoded', {
     limit: settings.storage.maxFileSize,
@@ -104,6 +101,14 @@ const bootstrap = async () => {
 
   // Inject the server url in the frontend page
   generateFrontConfig();
+
+  const keepAliveTimeout = twentyConfigService.get(
+    'SERVER_KEEP_ALIVE_TIMEOUT_MS',
+  );
+  const httpServer = app.getHttpServer();
+
+  httpServer.keepAliveTimeout = keepAliveTimeout;
+  httpServer.headersTimeout = keepAliveTimeout + 1000;
 
   await app.listen(twentyConfigService.get('NODE_PORT'));
 };

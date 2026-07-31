@@ -17,6 +17,7 @@ import { WorkspaceExportModule } from 'src/database/commands/workspace-export/wo
 import { TypeORMModule } from 'src/database/typeorm/typeorm.module';
 import { ApiKeyModule } from 'src/engine/core-modules/api-key/api-key.module';
 import { GenerateApiKeyCommand } from 'src/engine/core-modules/api-key/commands/generate-api-key.command';
+import { ApplicationInstallModule } from 'src/engine/core-modules/application/application-install/application-install.module';
 import { MarketplaceModule } from 'src/engine/core-modules/application/application-marketplace/marketplace.module';
 import { StaleRegistrationCleanupModule } from 'src/engine/core-modules/application/application-oauth/stale-registration-cleanup/stale-registration-cleanup.module';
 import { ApplicationUpgradeModule } from 'src/engine/core-modules/application/application-upgrade/application-upgrade.module';
@@ -48,10 +49,12 @@ import { WorkspaceCleanerModule } from 'src/engine/workspace-manager/workspace-c
 import { WorkspaceManagerModule } from 'src/engine/workspace-manager/workspace-manager.module';
 import { WorkspaceMigrationModule } from 'src/engine/workspace-manager/workspace-migration/workspace-migration.module';
 import { WorkspaceVersionModule } from 'src/engine/workspace-manager/workspace-version/workspace-version.module';
+import { WebhookSubscriptionModule } from 'src/modules/connected-account/webhook-subscription-manager/webhook-subscription.module';
 import { CalendarEventImportManagerModule } from 'src/modules/calendar/calendar-event-import-manager/calendar-event-import-manager.module';
 import { MessagingImportManagerModule } from 'src/modules/messaging/message-import-manager/messaging-import-manager.module';
 import { WorkflowRunQueueModule } from 'src/modules/workflow/workflow-runner/workflow-run-queue/workflow-run-queue.module';
 import { AutomatedTriggerModule } from 'src/modules/workflow/workflow-trigger/automated-trigger/automated-trigger.module';
+import { WorkflowCoreConsistencyModule } from 'src/modules/workflow/workflow-core-consistency/workflow-core-consistency.module';
 
 @Module({
   imports: [
@@ -61,7 +64,9 @@ import { AutomatedTriggerModule } from 'src/modules/workflow/workflow-trigger/au
     // Cron command dependencies
     MessagingImportManagerModule,
     CalendarEventImportManagerModule,
+    WebhookSubscriptionModule,
     AutomatedTriggerModule,
+    WorkflowCoreConsistencyModule,
     FileModule,
     WorkspaceModule,
     WorkflowRunQueueModule,
@@ -84,6 +89,7 @@ import { AutomatedTriggerModule } from 'src/modules/workflow/workflow-trigger/au
     EnterpriseModule,
     TwentyConfigModule,
     MarketplaceModule,
+    ApplicationInstallModule,
     ApplicationUpgradeModule,
     StaleRegistrationCleanupModule,
     PreInstalledAppsModule,

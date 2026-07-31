@@ -5,6 +5,7 @@ import {
   FieldMetadataType,
   NumberDataType,
   RelationType,
+  OpenRecordIn,
 } from 'twenty-shared/types';
 
 import { type FlatFieldMetadata } from 'src/engine/metadata-modules/flat-field-metadata/types/flat-field-metadata.type';
@@ -14,8 +15,6 @@ import {
   createStandardFieldFlatMetadata,
 } from 'src/engine/workspace-manager/twenty-standard-application/utils/field-metadata/create-standard-field-flat-metadata.util';
 import { createStandardRelationFieldFlatMetadata } from 'src/engine/workspace-manager/twenty-standard-application/utils/field-metadata/create-standard-relation-field-flat-metadata.util';
-import { getTsVectorColumnExpressionFromFields } from 'src/engine/workspace-manager/utils/get-ts-vector-column-expression.util';
-import { SEARCH_FIELDS_BY_STANDARD_OBJECT_NAME } from 'src/engine/workspace-manager/twenty-standard-application/constants/search-fields-by-standard-object-name.constant';
 import { WorkspaceMemberNumberFormatEnum } from 'src/modules/workspace-member/standard-objects/workspace-member.workspace-entity';
 
 export const buildWorkspaceMemberStandardFlatFieldMetadatas = ({
@@ -159,6 +158,27 @@ export const buildWorkspaceMemberStandardFlatFieldMetadatas = ({
       isNullable: false,
       isUIEditable: false,
       defaultValue: "'System'",
+    },
+    standardObjectMetadataRelatedEntityIds,
+    dependencyFlatEntityMaps,
+    twentyStandardApplicationId,
+    now,
+  }),
+  openRecordIn: createStandardFieldFlatMetadata({
+    objectName,
+    workspaceId,
+    context: {
+      fieldName: 'openRecordIn',
+      type: FieldMetadataType.TEXT,
+      label: i18nLabel(msg`Open Records In`),
+      description: i18nLabel(
+        msg`Where records open for objects that follow the member's preference`,
+      ),
+      icon: 'IconLayoutSidebarRight',
+      isSystem: true,
+      isNullable: false,
+      isUIEditable: false,
+      defaultValue: `'${OpenRecordIn.SIDE_PANEL}'`,
     },
     standardObjectMetadataRelatedEntityIds,
     dependencyFlatEntityMaps,
@@ -457,12 +477,6 @@ export const buildWorkspaceMemberStandardFlatFieldMetadatas = ({
       isSystem: true,
       isNullable: true,
       isUIEditable: false,
-      settings: {
-        generatedType: 'STORED',
-        asExpression: getTsVectorColumnExpressionFromFields(
-          SEARCH_FIELDS_BY_STANDARD_OBJECT_NAME[objectName],
-        ),
-      },
     },
     standardObjectMetadataRelatedEntityIds,
     dependencyFlatEntityMaps,

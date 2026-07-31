@@ -19,9 +19,15 @@ Mit Iterator können Sie ein Array von Datensätzen durchlaufen und für jeden D
 Iterator erwartet ein **Array** als Eingabe. Dann:
 
 1. Nimmt das erste Element aus dem Array
-2. Führt alle Aktionen innerhalb des Iterators mit diesem Element aus
+2. Führt alle Aktionen im Iterator mit diesem Item aus
 3. Wechselt zum nächsten Element
 4. Wiederholt sich, bis alle Elemente verarbeitet sind
+
+### Auswählen des Arrays, über das iteriert werden soll
+
+Die meisten Array-Quellen (Search Records, ein Webhook-Array-Feld, ein Bulk Manual Trigger) können direkt im Variablen-Auswahldialog ausgewählt werden.
+
+Wenn ein **Code**- oder **Logic Function**-Schritt ein *Top-Level-Array* zurückgibt, erscheint dessen Ausgabe im Variablen-Auswahldialog als indizierte Einträge (`0`, `1`, `2`, …). Um über das Array als Ganzes zu iterieren, wähle für diesen Schritt die Option **Whole list** – der Iterator leitet dann die Struktur jedes Elements automatisch aus der Liste ab.
 
 ## Grundlegende Einrichtung
 
@@ -52,7 +58,7 @@ Iterator erwartet ein **Array** als Eingabe. Dann:
 
 Aktionen, die nach dem Iterator platziert werden, werden für jedes Element ausgeführt:
 
-1. Fügen Sie eine **E-Mail senden**-Aktion hinzu (im Iterator)
+1. Füge **E-Mail senden** Aktion (innerhalb des Iterators) hinzu
 2. An: `{{iterator.currentItem.email}}`
 3. Betreff: Hallo `{{iterator.currentItem.firstName}}`!
 4. Text: Personalisierte Nachricht unter Verwendung der Felder des aktuellen Elements
@@ -76,6 +82,8 @@ Im Iterator verwenden Sie `{{iterator.currentItem}}`, um auf den aktuellen Daten
 | `{{iterator.currentItem.email}}`        | E-Mail-Feld                                       |
 | `{{iterator.currentItem.company.name}}` | Name des zugehörigen Unternehmens                 |
 | `{{iterator.index}}`                    | Aktuelle Position im Array (0-basiert)            |
+
+Im Variablen-Auswahldialog kannst du entweder in ein bestimmtes Feld des aktuellen Elements hineinnavigieren oder **Use the whole item** auswählen, um auf das gesamte aktuelle Element zu verweisen (`{{iterator.currentItem}}`). Das Auswählen des gesamten Elements ist praktisch, wenn du einen vollständigen Datensatz direkt an einen nachgelagerten Schritt übergeben möchtest, anstatt ihn Feld für Feld neu aufzubauen.
 
 ## Häufige Muster
 

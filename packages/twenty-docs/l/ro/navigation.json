@@ -145,6 +145,14 @@
               "label": "How-Tos"
             }
           }
+        },
+        "legal": {
+          "label": "Juridic",
+          "groups": {
+            "legalHowTos": {
+              "label": "Ghiduri practice"
+            }
+          }
         }
       }
     },
@@ -160,6 +168,9 @@
             "appsGettingStarted": {
               "label": "Începeți"
             },
+            "appsTutorial": {
+              "label": "Tutorial"
+            },
             "appsConfig": {
               "label": "Configurare"
             },
@@ -174,6 +185,9 @@
             },
             "appsOperations": {
               "label": "Operațiuni"
+            },
+            "appsTranslations": {
+              "label": "Traduceri"
             }
           }
         },

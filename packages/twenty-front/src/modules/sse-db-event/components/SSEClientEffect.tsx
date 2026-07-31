@@ -1,7 +1,10 @@
 import { useHasAccessTokenPair } from '@/auth/hooks/useHasAccessTokenPair';
 import { tokenPairState } from '@/auth/states/tokenPairState';
+import { useListenToBrowserEvent } from '@/browser-event/hooks/useListenToBrowserEvent';
 import { dispatchBrowserEvent } from '@/browser-event/utils/dispatchBrowserEvent';
+import { useResyncMetadataStore } from '@/metadata-store/hooks/useResyncMetadataStore';
 import { SSE_CLIENT_RECONNECTED_EVENT_NAME } from '@/sse-db-event/constants/SseClientReconnectedEventName';
+import { SSE_RESYNC_DEBOUNCE_TIME_IN_MS } from '@/sse-db-event/constants/SseResyncDebounceTimeInMs';
 import { useHandleSseClientConnectionRetry } from '@/sse-db-event/hooks/useHandleSseClientConnectionRetry';
 import { activeQueryListenersState } from '@/sse-db-event/states/activeQueryListenersState';
 import { sseClientState } from '@/sse-db-event/states/sseClientState';
@@ -11,6 +14,7 @@ import { isNonEmptyArray } from '@sniptt/guards';
 import { createClient } from 'graphql-sse';
 import { useCallback, useEffect } from 'react';
 import { isDefined } from 'twenty-shared/utils';
+import { useDebouncedCallback } from 'use-debounce';
 import { REACT_APP_SERVER_BASE_URL } from '~/config';
 import { useStore } from 'jotai';
 
@@ -19,6 +23,18 @@ export const SSEClientEffect = () => {
   const hasAccessTokenPair = useHasAccessTokenPair();
   const [sseClient, setSseClient] = useAtomState(sseClientState);
   const tokenPair = useAtomStateValue(tokenPairState);
+  const { resyncMetadataStore } = useResyncMetadataStore();
+
+  const debouncedResyncMetadataStore = useDebouncedCallback(
+    resyncMetadataStore,
+    SSE_RESYNC_DEBOUNCE_TIME_IN_MS,
+    { leading: false },
+  );
+
+  useListenToBrowserEvent({
+    eventName: SSE_CLIENT_RECONNECTED_EVENT_NAME,
+    onBrowserEvent: debouncedResyncMetadataStore,
+  });
 
   const handleSSEClientConnected = useCallback(
     (reconnected: boolean) => {

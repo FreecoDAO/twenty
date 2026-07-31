@@ -3,10 +3,20 @@ import { I18nProvider } from '@lingui/react';
 import { act, renderHook } from '@testing-library/react';
 import { getDefaultStore } from 'jotai';
 import { AppPath, SidePanelPages } from 'twenty-shared/types';
+import { type AppLocale } from 'twenty-shared/translations';
 
 import { MAIN_CONTEXT_STORE_INSTANCE_ID } from '@/context-store/constants/MainContextStoreInstanceId';
 import { contextStoreRecordShowParentViewComponentState } from '@/context-store/states/contextStoreRecordShowParentViewComponentState';
 import { useFrontComponentExecutionContext } from '@/front-components/hooks/useFrontComponentExecutionContext';
+
+jest.mock('@/object-metadata/hooks/useObjectMetadataItems', () => ({
+  useObjectMetadataItems: () => ({
+    objectMetadataItems: [
+      { nameSingular: 'workflow', openRecordIn: 'RECORD_PAGE' },
+      { nameSingular: 'lead', openRecordIn: 'USER_CHOICE' },
+    ],
+  }),
+}));
 
 const mockNavigateApp = jest.fn();
 const mockRequestAccessTokenRefresh = jest.fn();
@@ -26,6 +36,7 @@ const mockEnqueueWarningSnackBar = jest.fn();
 const mockCloseSidePanelMenu = jest.fn();
 const mockSetCommandMenuItemProgress = jest.fn();
 const mockCopyToClipboard = jest.fn();
+const mockSetRecordPageActiveTabId = jest.fn();
 
 let mockCurrentUser: { id: string } | null = { id: 'user-123' };
 let mockIsMobile = false;
@@ -129,6 +140,11 @@ jest.mock('~/hooks/useCopyToClipboard', () => ({
   }),
 }));
 
+jest.mock('@/page-layout/utils/setRecordPageActiveTabId', () => ({
+  setRecordPageActiveTabId: (params: unknown) =>
+    mockSetRecordPageActiveTabId(params),
+}));
+
 const renderUseFrontComponentExecutionContext = (
   params: Omit<
     Parameters<typeof useFrontComponentExecutionContext>[0],
@@ -180,7 +196,7 @@ describe('useFrontComponentExecutionContext', () => {
         recordId: 'record-456',
         selectedRecordIds: ['record-456'],
         colorScheme: 'light',
-        locale: i18n.locale,
+        locale: i18n.locale as AppLocale,
       });
     });
 
@@ -196,7 +212,7 @@ describe('useFrontComponentExecutionContext', () => {
         recordId: null,
         selectedRecordIds: ['record-1', 'record-2', 'record-3'],
         colorScheme: 'light',
-        locale: i18n.locale,
+        locale: i18n.locale as AppLocale,
       });
     });
 
@@ -396,6 +412,63 @@ describe('useFrontComponentExecutionContext', () => {
       expect(mockNavigateSidePanel).not.toHaveBeenCalled();
     });
 
+    it('should forward the tab to the side panel record page', async () => {
+      const { result } = renderUseFrontComponentExecutionContext({
+        frontComponentId: FRONT_COMPONENT_ID,
+      });
+
+      await act(async () => {
+        await result.current.frontComponentHostCommunicationApi.openSidePanelPage(
+          {
+            page: SidePanelPages.ViewRecord,
+            recordId: 'lead-1',
+            objectNameSingular: 'lead',
+            tab: 'tab-emails',
+          },
+        );
+      });
+
+      expect(mockOpenRecordInSidePanel).toHaveBeenCalledWith({
+        recordId: 'lead-1',
+        objectNameSingular: 'lead',
+        tab: 'tab-emails',
+        resetNavigationStack: undefined,
+      });
+    });
+
+    it('should set the record page active tab when falling back to full-page navigation', async () => {
+      mockIsMobile = true;
+
+      const { result } = renderUseFrontComponentExecutionContext({
+        frontComponentId: FRONT_COMPONENT_ID,
+      });
+
+      await act(async () => {
+        await result.current.frontComponentHostCommunicationApi.openSidePanelPage(
+          {
+            page: SidePanelPages.ViewRecord,
+            recordId: 'lead-1',
+            objectNameSingular: 'lead',
+            tab: 'tab-emails',
+          },
+        );
+      });
+
+      expect(mockSetRecordPageActiveTabId).toHaveBeenCalledWith({
+        recordId: 'lead-1',
+        objectNameSingular: 'lead',
+        tabId: 'tab-emails',
+        store: expect.anything(),
+      });
+      expect(mockNavigateApp).toHaveBeenCalledWith(
+        AppPath.RecordShowPage,
+        { objectNameSingular: 'lead', objectRecordId: 'lead-1' },
+        undefined,
+        undefined,
+      );
+      expect(mockOpenRecordInSidePanel).not.toHaveBeenCalled();
+    });
+
     it('should fall back to full-page navigation on mobile', async () => {
       mockIsMobile = true;
 
@@ -422,7 +495,7 @@ describe('useFrontComponentExecutionContext', () => {
       expect(mockOpenRecordInSidePanel).not.toHaveBeenCalled();
     });
 
-    it('should fall back to full-page navigation when the object cannot open in the side panel', async () => {
+    it('should fall back to full-page navigation when the object is pinned to the record page', async () => {
       const { result } = renderUseFrontComponentExecutionContext({
         frontComponentId: FRONT_COMPONENT_ID,
       });
@@ -542,7 +615,7 @@ describe('useFrontComponentExecutionContext', () => {
             title: 'Confirm?',
             subtitle: 'Are you sure?',
             confirmButtonText: 'Yes',
-            confirmButtonAccent: 'danger' as never,
+            confirmButtonAccent: 'danger',
           },
         );
       });
@@ -555,6 +628,32 @@ describe('useFrontComponentExecutionContext', () => {
         title: 'Confirm?',
         subtitle: 'Are you sure?',
         confirmButtonText: 'Yes',
+        confirmButtonAccent: 'danger',
+      });
+    });
+
+    it('should preserve danger as the default confirmation accent', async () => {
+      const { result } = renderUseFrontComponentExecutionContext({
+        frontComponentId: FRONT_COMPONENT_ID,
+      });
+
+      await act(async () => {
+        await result.current.frontComponentHostCommunicationApi.openCommandConfirmationModal(
+          {
+            title: 'Confirm?',
+            subtitle: 'Are you sure?',
+          },
+        );
+      });
+
+      expect(mockOpenConfirmationModal).toHaveBeenCalledWith({
+        caller: {
+          type: 'frontComponent',
+          frontComponentId: FRONT_COMPONENT_ID,
+        },
+        title: 'Confirm?',
+        subtitle: 'Are you sure?',
+        confirmButtonText: undefined,
         confirmButtonAccent: 'danger',
       });
     });

@@ -15,10 +15,13 @@ export { AppBasePath } from './AppBasePath';
 export { AppPath } from './AppPath';
 export type { Arrayable } from './Arrayable';
 export type { ArraySortDirection } from './ArraySortDirection';
+export type { AssertUnreachable } from './AssertUnreachable.type';
 export { CalendarChannelContactAutoCreationPolicy } from './CalendarChannelContactAutoCreationPolicy';
 export { CalendarChannelSyncStage } from './CalendarChannelSyncStage';
 export { CalendarChannelSyncStatus } from './CalendarChannelSyncStatus';
 export { CalendarChannelVisibility } from './CalendarChannelVisibility';
+export type { CommandMenuConfirmationModalResult } from './CommandMenuConfirmationModalResult';
+export type { CommandMenuConfirmationModalResultBrowserEventDetail } from './CommandMenuConfirmationModalResultBrowserEventDetail';
 export type { CommandMenuContextApi } from './CommandMenuContextApi';
 export { CommandMenuItemViewType } from './CommandMenuItemViewType';
 export type { ActorMetadata } from './composite-types/actor.composite-type';
@@ -144,6 +147,7 @@ export {
   LOGIC_FUNCTION_HTTP_RESPONSE_MARKER,
   isLogicFunctionHttpResponse,
 } from './LogicFunctionResponse';
+export { MessageCampaignStatus } from './MessageCampaignStatus';
 export { MessageChannelContactAutoCreationPolicy } from './MessageChannelContactAutoCreationPolicy';
 export { MessageChannelPendingGroupEmailsAction } from './MessageChannelPendingGroupEmailsAction';
 export { MessageChannelSyncStage } from './MessageChannelSyncStage';
@@ -160,6 +164,7 @@ export { NavigationMenuItemType } from './NavigationMenuItemType';
 export type { NonNullableRequired } from './NonNullableRequired';
 export type { Nullable } from './Nullable';
 export type { NullablePartial } from './NullablePartial';
+export { ObjectOpenRecordIn } from './ObjectOpenRecordIn';
 export type { ObjectPermissions } from './ObjectPermissions';
 export type { ObjectRecord } from './ObjectRecord';
 export type {
@@ -174,6 +179,7 @@ export { OrderByDirection } from './ObjectRecordGroupBy';
 export { ObjectRecordGroupByDateGranularity } from './ObjectRecordGroupByDateGranularity';
 export type { ObjectsPermissions } from './ObjectsPermissions';
 export type { ObjectsPermissionsByRoleId } from './ObjectsPermissionsByRoleId';
+export { OpenRecordIn } from './OpenRecordIn';
 export type { OrderBy } from './OrderBy';
 export type {
   ChartRecordFilter,
@@ -181,6 +187,8 @@ export type {
   ChartFilter,
   UniversalChartFilter,
 } from './page-layout/chart-filter.type';
+export type { GraphWidgetConfigurationType } from './page-layout/graph-widget-configuration-type';
+export { GRAPH_WIDGET_CONFIGURATION_TYPES } from './page-layout/graph-widget-configuration-type';
 export type { GridPosition } from './page-layout/grid-position.type';
 export type {
   AggregateChartConfiguration,
@@ -201,6 +209,8 @@ export type {
   FilesConfiguration,
   EmailsConfiguration,
   EmailThreadConfiguration,
+  MessageCampaignBodyConfiguration,
+  MessageCampaignDetailsConfiguration,
   CalendarConfiguration,
   WorkflowConfiguration,
   WorkflowVersionConfiguration,
@@ -215,6 +225,7 @@ export type {
 } from './page-layout/page-layout-widget-position.type';
 export type { PageLayoutWidgetUniversalConfiguration } from './page-layout/page-layout-widget-universal-configuration.type';
 export { PageLayoutTabLayoutMode } from './page-layout/PageLayoutTabLayoutMode';
+export { PageLayoutType } from './page-layout/PageLayoutType';
 export type { PageLayoutWidgetConditionalDisplay } from './page-layout/PageLayoutWidgetConditionalDisplay';
 export type { RatioAggregateConfig } from './page-layout/ratio-aggregate-config.type';
 export type { PartialFieldMetadataItem } from './PartialFieldMetadataItem';
@@ -279,6 +290,7 @@ export type {
 } from './RowLevelPermissionPredicateValue';
 export type { SerializedRelation } from './SerializedRelation.type';
 export { SERIALIZED_RELATION_BRAND } from './SerializedRelation.type';
+export { ServerFileFolder } from './ServerFileFolder';
 export { SettingsPath } from './SettingsPath';
 export { SidePanelPages } from './SidePanelPages';
 export type { Sources } from './SourcesType';

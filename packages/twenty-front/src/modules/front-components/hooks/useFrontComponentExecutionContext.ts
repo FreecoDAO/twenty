@@ -1,3 +1,5 @@
+import { useObjectMetadataItems } from '@/object-metadata/hooks/useObjectMetadataItems';
+import { resolveOpenRecordIn } from '@/object-record/record-index/utils/resolveOpenRecordIn';
 import { useSetAtomState } from '@/ui/utilities/state/jotai/hooks/useSetAtomState';
 import { isNonEmptyString } from '@sniptt/guards';
 import { useLingui } from '@lingui/react/macro';
@@ -8,10 +10,14 @@ import {
 } from 'twenty-front-component-renderer';
 import {
   AppPath,
+  ObjectOpenRecordIn,
+  OpenRecordIn,
   SidePanelPages,
   type EnqueueSnackbarParams,
 } from 'twenty-shared/types';
+import { type AppLocale } from 'twenty-shared/translations';
 
+import { useOpenAskAiPageWithPreprompt } from '@/ai/hooks/useOpenAskAiPageWithPreprompt';
 import { currentUserState } from '@/auth/states/currentUserState';
 import { useCommandMenuConfirmationModal } from '@/command-menu-item/confirmation-modal/hooks/useCommandMenuConfirmationModal';
 import { useUnmountCommand } from '@/command-menu-item/engine-command/hooks/useUnmountEngineCommand';
@@ -19,13 +25,13 @@ import { commandMenuItemProgressFamilyState } from '@/command-menu-item/states/c
 import { MAIN_CONTEXT_STORE_INSTANCE_ID } from '@/context-store/constants/MainContextStoreInstanceId';
 import { contextStoreRecordShowParentViewComponentState } from '@/context-store/states/contextStoreRecordShowParentViewComponentState';
 import { useRequestApplicationTokenRefresh } from '@/front-components/hooks/useRequestApplicationTokenRefresh';
-import { canOpenObjectInSidePanel } from '@/object-record/utils/canOpenObjectInSidePanel';
 import { useNavigateSidePanel } from '@/side-panel/hooks/useNavigateSidePanel';
 import { useOpenComposeEmailInSidePanel } from '@/side-panel/hooks/useOpenComposeEmailInSidePanel';
 import { useOpenFrontComponentInSidePanel } from '@/side-panel/hooks/useOpenFrontComponentInSidePanel';
 import { useOpenRecordInSidePanel } from '@/side-panel/hooks/useOpenRecordInSidePanel';
 import { useOpenRichTextInSidePanel } from '@/side-panel/hooks/useOpenRichTextInSidePanel';
 import { useSidePanelMenu } from '@/side-panel/hooks/useSidePanelMenu';
+import { setRecordPageActiveTabId } from '@/page-layout/utils/setRecordPageActiveTabId';
 import { sidePanelSearchState } from '@/side-panel/states/sidePanelSearchState';
 import { useSnackBar } from '@/ui/feedback/snack-bar-manager/hooks/useSnackBar';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
@@ -62,6 +68,7 @@ export const useFrontComponentExecutionContext = ({
     frontComponentId,
   });
   const { openConfirmationModal } = useCommandMenuConfirmationModal();
+  const { openAskAiPageWithPreprompt } = useOpenAskAiPageWithPreprompt();
   const { navigateSidePanel } = useNavigateSidePanel();
   const { openRecordInSidePanel: openRecordInSidePanelInternal } =
     useOpenRecordInSidePanel();
@@ -69,6 +76,7 @@ export const useFrontComponentExecutionContext = ({
   const { openComposeEmailInSidePanel } = useOpenComposeEmailInSidePanel();
   const { openFrontComponentInSidePanel } = useOpenFrontComponentInSidePanel();
   const isMobile = useIsMobile();
+  const { objectMetadataItems } = useObjectMetadataItems();
   const setSidePanelSearch = useSetAtomState(sidePanelSearchState);
   const { getIcon } = useIcons();
   const unmountEngineCommand = useUnmountCommand();
@@ -126,9 +134,30 @@ export const useFrontComponentExecutionContext = ({
   const openSidePanelPage: FrontComponentHostCommunicationApi['openSidePanelPage'] =
     async (params) => {
       if (params.page === SidePanelPages.ViewRecord) {
-        const { recordId, objectNameSingular, resetNavigationStack } = params;
+        const { recordId, objectNameSingular, tab, resetNavigationStack } =
+          params;
 
-        if (isMobile || !canOpenObjectInSidePanel(objectNameSingular)) {
+        const objectMetadataItem = objectMetadataItems.find(
+          (item) => item.nameSingular === objectNameSingular,
+        );
+
+        const resolvedOpenRecordIn = resolveOpenRecordIn({
+          objectOpenRecordIn:
+            objectMetadataItem?.openRecordIn ?? ObjectOpenRecordIn.USER_CHOICE,
+          openRecordInPreference: OpenRecordIn.SIDE_PANEL,
+          canDisplaySidePanel: !isMobile,
+        });
+
+        if (resolvedOpenRecordIn === OpenRecordIn.RECORD_PAGE) {
+          if (isDefined(tab)) {
+            setRecordPageActiveTabId({
+              recordId,
+              objectNameSingular,
+              tabId: tab,
+              store,
+            });
+          }
+
           await navigate(AppPath.RecordShowPage, {
             objectNameSingular,
             objectRecordId: recordId,
@@ -140,6 +169,7 @@ export const useFrontComponentExecutionContext = ({
         openRecordInSidePanelInternal({
           recordId,
           objectNameSingular,
+          tab,
           resetNavigationStack,
         });
 
@@ -192,6 +222,24 @@ export const useFrontComponentExecutionContext = ({
         return;
       }
 
+      if (
+        params.page === SidePanelPages.AskAI &&
+        isDefined(params.preprompt) &&
+        isNonEmptyString(params.preprompt.text)
+      ) {
+        openAskAiPageWithPreprompt({
+          text: params.preprompt.text,
+          mode: params.preprompt.mode,
+          model: params.preprompt.model,
+        });
+
+        if (params.shouldResetSearchState === true) {
+          setSidePanelSearch('');
+        }
+
+        return;
+      }
+
       navigateSidePanel({
         page: params.page,
         pageTitle: params.pageTitle,
@@ -204,7 +252,12 @@ export const useFrontComponentExecutionContext = ({
     };
 
   const openCommandConfirmationModal: FrontComponentHostCommunicationApi['openCommandConfirmationModal'] =
-    async ({ title, subtitle, confirmButtonText, confirmButtonAccent }) => {
+    async ({
+      title,
+      subtitle,
+      confirmButtonText,
+      confirmButtonAccent = 'danger',
+    }) => {
       openConfirmationModal({
         caller: { type: 'frontComponent', frontComponentId },
         title,
@@ -252,7 +305,9 @@ export const useFrontComponentExecutionContext = ({
     recordId: selectedRecordIds?.length === 1 ? selectedRecordIds[0] : null,
     selectedRecordIds: selectedRecordIds ?? [],
     colorScheme,
-    locale: i18n.locale,
+    // i18n.locale is a Lingui string; the host is always configured with the
+    // APP_LOCALES set, so it is a valid AppLocale.
+    locale: i18n.locale as AppLocale,
   };
 
   const unmountFrontComponent: FrontComponentHostCommunicationApi['unmountFrontComponent'] =

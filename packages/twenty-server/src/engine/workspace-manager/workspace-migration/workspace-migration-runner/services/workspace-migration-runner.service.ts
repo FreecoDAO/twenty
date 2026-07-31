@@ -9,13 +9,13 @@ import { LoggerService } from 'src/engine/core-modules/logger/logger.service';
 import { TwentyConfigService } from 'src/engine/core-modules/twenty-config/twenty-config.service';
 import { WorkspaceManyOrAllFlatEntityMapsCacheService } from 'src/engine/metadata-modules/flat-entity/services/workspace-many-or-all-flat-entity-maps-cache.service';
 import { AllFlatEntityMaps } from 'src/engine/metadata-modules/flat-entity/types/all-flat-entity-maps.type';
+import { getFlatEntityMapsExceptionContext } from 'src/engine/metadata-modules/flat-entity/utils/get-flat-entity-maps-exception-context.util';
 import { getMetadataFlatEntityMapsKey } from 'src/engine/metadata-modules/flat-entity/utils/get-metadata-flat-entity-maps-key.util';
 import { getMetadataRelatedMetadataNamesForValidation } from 'src/engine/metadata-modules/flat-entity/utils/get-metadata-related-metadata-names-for-validation.util';
 import { getMetadataRelatedMetadataNames } from 'src/engine/metadata-modules/flat-entity/utils/get-metadata-related-metadata-names.util';
 import { getMetadataSerializedRelationNames } from 'src/engine/metadata-modules/flat-entity/utils/get-metadata-serialized-relation-names.util';
-import { FIND_ALL_VIEWS_GRAPHQL_OPERATION } from 'src/engine/metadata-modules/view/constants/find-all-views-graphql-operation.constant';
+import { createSearchFieldMetadatasByTsVectorFieldIdAccessor } from 'src/engine/metadata-modules/flat-search-field-metadata/utils/create-search-field-metadatas-by-ts-vector-field-id-accessor.util';
 import { WorkspaceMetadataVersionService } from 'src/engine/metadata-modules/workspace-metadata-version/services/workspace-metadata-version.service';
-import { WorkspaceCacheStorageService } from 'src/engine/workspace-cache-storage/workspace-cache-storage.service';
 import { WorkspaceCacheService } from 'src/engine/workspace-cache/services/workspace-cache.service';
 import { WorkspaceMigration } from 'src/engine/workspace-manager/workspace-migration/workspace-migration-builder/types/workspace-migration.type';
 import {
@@ -23,6 +23,7 @@ import {
   WorkspaceMigrationRunnerExceptionCode,
 } from 'src/engine/workspace-manager/workspace-migration/workspace-migration-runner/exceptions/workspace-migration-runner.exception';
 import { WorkspaceMigrationRunnerActionHandlerRegistryService } from 'src/engine/workspace-manager/workspace-migration/workspace-migration-runner/registry/workspace-migration-runner-action-handler-registry.service';
+import { buildPreallocatedIdByUniversalIdentifierFromActions } from 'src/engine/workspace-manager/workspace-migration/workspace-migration-runner/utils/build-preallocated-id-by-universal-identifier-from-actions.util';
 import { type AfterCommitSideEffect } from 'src/engine/workspace-manager/workspace-migration/workspace-migration-runner/types/after-commit-side-effect.type';
 import { type MetadataEvent } from 'src/engine/workspace-manager/workspace-migration/workspace-migration-runner/types/metadata-event';
 
@@ -34,7 +35,6 @@ export class WorkspaceMigrationRunnerService {
     private readonly coreDataSource: DataSource,
     private readonly workspaceMigrationRunnerActionHandlerRegistry: WorkspaceMigrationRunnerActionHandlerRegistryService,
     private readonly workspaceMetadataVersionService: WorkspaceMetadataVersionService,
-    private readonly workspaceCacheStorageService: WorkspaceCacheStorageService,
     private readonly workspaceCacheService: WorkspaceCacheService,
     private readonly logger: LoggerService,
     private readonly twentyConfigService: TwentyConfigService,
@@ -59,28 +59,6 @@ export class WorkspaceMigrationRunnerService {
         this.workspaceMetadataVersionService.incrementMetadataVersion(
           workspaceId,
         ),
-      );
-    }
-
-    const viewRelatedFlatMapsKeys: (keyof AllFlatEntityMaps)[] = [
-      'flatViewMaps',
-      'flatViewFilterMaps',
-      'flatViewGroupMaps',
-      'flatViewFieldMaps',
-      'flatViewFilterGroupMaps',
-    ];
-    const shouldInvalidateFindViewsGraphqlCacheOperation =
-      viewRelatedFlatMapsKeys.some((key) => flatMapsKeysSet.has(key));
-
-    if (
-      shouldInvalidateFindViewsGraphqlCacheOperation ||
-      shouldIncrementMetadataGraphqlSchemaVersion
-    ) {
-      asyncOperations.push(
-        this.workspaceCacheStorageService.flushGraphQLOperation({
-          operationName: FIND_ALL_VIEWS_GRAPHQL_OPERATION,
-          workspaceId,
-        }),
       );
     }
 
@@ -229,6 +207,17 @@ export class WorkspaceMigrationRunnerService {
     const actionMetadataNames = [
       ...new Set(actions.flatMap((action) => action.metadataName)),
     ];
+
+    const hasSearchVectorRebuildAction = actions.some(
+      (action) =>
+        action.metadataName === 'fieldMetadata' &&
+        action.type === 'update' &&
+        action.rebuildSearchVector === true,
+    );
+
+    const searchVectorRebuildMetadataNames: AllMetadataName[] =
+      hasSearchVectorRebuildAction ? ['index'] : [];
+
     const actionsMetadataAndRelatedMetadataNames: AllMetadataName[] = [
       ...new Set([
         ...actionMetadataNames,
@@ -237,6 +226,7 @@ export class WorkspaceMigrationRunnerService {
         ...actionMetadataNames.flatMap(
           getMetadataRelatedMetadataNamesForValidation,
         ),
+        ...searchVectorRebuildMetadataNames,
       ]),
     ];
     const allFlatEntityMapsKeys = actionsMetadataAndRelatedMetadataNames.map(
@@ -281,6 +271,9 @@ export class WorkspaceMigrationRunnerService {
       });
     }
 
+    const preallocatedIdByUniversalIdentifierByMetadataName =
+      buildPreallocatedIdByUniversalIdentifierFromActions(actions);
+
     this.logger.perfTime('Runner', 'Transaction execution');
 
     await queryRunner.connect();
@@ -293,6 +286,11 @@ export class WorkspaceMigrationRunnerService {
     let slowestActionMs = 0;
     let slowestActionLabel = 'n/a';
     let actionCount = 0;
+
+    const searchFieldMetadatasByTsVectorFieldIdAccessor =
+      createSearchFieldMetadatasByTsVectorFieldIdAccessor(
+        () => allFlatEntityMaps.flatSearchFieldMetadataMaps,
+      );
 
     try {
       await queryRunner.query(`SET LOCAL lock_timeout = '8s'`);
@@ -313,6 +311,9 @@ export class WorkspaceMigrationRunnerService {
                 allFlatEntityMaps,
                 queryRunner,
                 workspaceId,
+                preallocatedIdByUniversalIdentifierByMetadataName,
+                getSearchFieldMetadatasByTsVectorFieldId:
+                  searchFieldMetadatasByTsVectorFieldIdAccessor.get,
               },
             },
           );
@@ -337,6 +338,10 @@ export class WorkspaceMigrationRunnerService {
           ...allFlatEntityMaps,
           ...partialOptimisticCache,
         } as typeof allFlatEntityMaps;
+
+        if (action.metadataName === 'searchFieldMetadata') {
+          searchFieldMetadatasByTsVectorFieldIdAccessor.invalidate();
+        }
 
         allMetadataEvents.push(...metadataEvents);
         allAfterCommitSideEffects.push(...afterCommitSideEffects);
@@ -415,6 +420,7 @@ export class WorkspaceMigrationRunnerService {
       throw new WorkspaceMigrationRunnerException({
         message: error.message,
         code: WorkspaceMigrationRunnerExceptionCode.INTERNAL_SERVER_ERROR,
+        context: getFlatEntityMapsExceptionContext(error),
       });
     } finally {
       await queryRunner.release();

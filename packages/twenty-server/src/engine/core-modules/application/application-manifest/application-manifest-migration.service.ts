@@ -5,6 +5,7 @@ import { ALL_METADATA_NAME } from 'twenty-shared/metadata';
 import { isDefined } from 'twenty-shared/utils';
 
 import { ComputeApplicationManifestAllUniversalFlatEntityMapsService } from 'src/engine/core-modules/application/application-manifest/services/compute-application-manifest-all-universal-flat-entity-maps.service';
+import { buildAllFlatEntityOperationRecordByMetadataNameFromFromTo } from 'src/engine/core-modules/application/application-manifest/utils/build-all-flat-entity-operation-record-by-metadata-name-from-from-to.util';
 import { buildFromToAllUniversalFlatEntityMaps } from 'src/engine/core-modules/application/application-manifest/utils/build-from-to-all-universal-flat-entity-maps.util';
 import { getApplicationSubAllFlatEntityMaps } from 'src/engine/core-modules/application/application-manifest/utils/get-application-sub-all-flat-entity-maps.util';
 import {
@@ -173,11 +174,6 @@ export class ApplicationManifestMigrationService {
   }> {
     const now = new Date().toISOString();
 
-    const { twentyStandardFlatApplication } =
-      await this.applicationService.findWorkspaceTwentyStandardAndCustomApplicationOrThrow(
-        { workspaceId },
-      );
-
     const recomputeStart = performance.now();
     const cacheResult = await this.workspaceCacheService.getOrRecompute(
       workspaceId,
@@ -193,7 +189,8 @@ export class ApplicationManifestMigrationService {
       ApplicationManifestMigrationService.name,
     );
 
-    const { featureFlagsMap, ...existingAllFlatEntityMaps } = cacheResult;
+    const { featureFlagsMap: _featureFlagsMap, ...existingAllFlatEntityMaps } =
+      cacheResult;
 
     const fromAllFlatEntityMaps = getApplicationSubAllFlatEntityMaps({
       applicationIds: [ownerFlatApplication.id],
@@ -208,32 +205,27 @@ export class ApplicationManifestMigrationService {
         workspaceId,
       });
 
-    const dependencyAllFlatEntityMaps = getApplicationSubAllFlatEntityMaps({
-      applicationIds:
-        ownerFlatApplication.universalIdentifier ===
-        TWENTY_STANDARD_APPLICATION.universalIdentifier
-          ? [twentyStandardFlatApplication.id]
-          : [ownerFlatApplication.id, twentyStandardFlatApplication.id],
-      fromAllFlatEntityMaps: existingAllFlatEntityMaps,
-    });
+    const allFlatEntityOperationRecordByMetadataName =
+      buildAllFlatEntityOperationRecordByMetadataNameFromFromTo({
+        fromAllFlatEntityMaps,
+        toAllUniversalFlatEntityMaps,
+        buildOptions: {
+          isSystemBuild: false,
+          inferDeletionFromMissingEntities: true,
+          applicationUniversalIdentifier:
+            ownerFlatApplication.universalIdentifier,
+        },
+      });
 
     const validateBuildRunStart = performance.now();
     const validateAndBuildResult =
-      await this.workspaceMigrationValidateBuildAndRunService.validateBuildAndRunWorkspaceMigrationFromTo(
+      await this.workspaceMigrationValidateBuildAndRunService.validateBuildAndRunWorkspaceMigrationFromRecord(
         {
-          buildOptions: {
-            isSystemBuild: false,
-            inferDeletionFromMissingEntities: true,
-            applicationUniversalIdentifier:
-              ownerFlatApplication.universalIdentifier,
-          },
-          fromToAllFlatEntityMaps: buildFromToAllUniversalFlatEntityMaps({
-            fromAllFlatEntityMaps,
-            toAllUniversalFlatEntityMaps,
-          }),
+          allFlatEntityOperationRecordByMetadataName,
           workspaceId,
-          dependencyAllFlatEntityMaps,
-          additionalCacheDataMaps: { featureFlagsMap },
+          isSystemBuild: false,
+          applicationUniversalIdentifier:
+            ownerFlatApplication.universalIdentifier,
           dryRun,
         },
       );
@@ -257,7 +249,7 @@ export class ApplicationManifestMigrationService {
     );
 
     if (!dryRun) {
-      await this.syncDefaultRole({
+      await this.syncDefaultRoleAndSettingsFrontComponent({
         manifest,
         workspaceId,
         ownerFlatApplication,
@@ -270,7 +262,7 @@ export class ApplicationManifestMigrationService {
     };
   }
 
-  private async syncDefaultRole({
+  private async syncDefaultRoleAndSettingsFrontComponent({
     manifest,
     workspaceId,
     ownerFlatApplication,
@@ -279,10 +271,13 @@ export class ApplicationManifestMigrationService {
     workspaceId: string;
     ownerFlatApplication: FlatApplication;
   }) {
-    const { flatRoleMaps: refreshedFlatRoleMaps } =
-      await this.workspaceCacheService.getOrRecompute(workspaceId, [
-        'flatRoleMaps',
-      ]);
+    const {
+      flatRoleMaps: refreshedFlatRoleMaps,
+      flatFrontComponentMaps: refreshedFlatFrontComponentMaps,
+    } = await this.workspaceCacheService.getOrRecompute(workspaceId, [
+      'flatRoleMaps',
+      'flatFrontComponentMaps',
+    ]);
 
     let defaultRoleId: string | null = null;
 
@@ -307,11 +302,31 @@ export class ApplicationManifestMigrationService {
       }
     }
 
-    if (isDefined(defaultRoleId)) {
-      await this.applicationService.update(ownerFlatApplication.id, {
-        workspaceId,
-        defaultRoleId,
+    let settingsCustomTabFrontComponentId: string | null = null;
+
+    const settingsFrontComponentUniversalIdentifier =
+      manifest.application.settingsFrontComponent?.universalIdentifier;
+
+    if (isDefined(settingsFrontComponentUniversalIdentifier)) {
+      const flatFrontComponent = findFlatEntityByUniversalIdentifier({
+        flatEntityMaps: refreshedFlatFrontComponentMaps,
+        universalIdentifier: settingsFrontComponentUniversalIdentifier,
       });
+
+      if (!isDefined(flatFrontComponent)) {
+        throw new ApplicationException(
+          `Failed to resolve front component for settings front component universalIdentifier ${settingsFrontComponentUniversalIdentifier}`,
+          ApplicationExceptionCode.ENTITY_NOT_FOUND,
+        );
+      }
+
+      settingsCustomTabFrontComponentId = flatFrontComponent.id;
     }
+
+    await this.applicationService.update(ownerFlatApplication.id, {
+      workspaceId,
+      settingsCustomTabFrontComponentId,
+      ...(isDefined(defaultRoleId) ? { defaultRoleId } : {}),
+    });
   }
 }

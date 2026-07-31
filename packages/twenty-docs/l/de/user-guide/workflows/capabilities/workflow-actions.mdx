@@ -19,7 +19,7 @@ Aktionen definieren, was nach dem Auslösen passiert. Sie können mehrere Aktion
 
 <img src="/images/user-guide/workflows/workflow_actions.png" style={{width:'100%'}} />
 
-### Einen Datensatz erstellen
+### Datensatz erstellen
 
 Fügt einem ausgewählten Objekt einen neuen Datensatz hinzu.
 
@@ -112,7 +112,7 @@ Erstellt einen neuen Datensatz oder aktualisiert einen vorhandenen anhand von Ü
 
 **Konfiguration**:
 
-* Wählen Sie ein Array von Datensätzen aus einem vorherigen Schritt (z.B. Ergebnisse von Suchdatensätzen, aus einem manuellen Trigger mit Bulk-Verfügbarkeit, von einem Codeknoten)
+* Wählen Sie das Array der Datensätze aus einem vorherigen Schritt (z.B. Ergebnisse aus Suchdatensätzen, aus einem manuellen Trigger mit Bulk-Verfügbarkeit, aus einem Codeknoten). Wenn ein Code- oder Logikfunktions-Schritt ein Top-Level-Array zurückgibt, wählen Sie die Option **Whole list**, um über die gesamte Ausgabe zu iterieren.
 * Definieren Sie die Aktionen, die für jeden Datensatz in der Schleife ausgeführt werden sollen.
 
 <Note>
@@ -120,7 +120,7 @@ Erstellt einen neuen Datensatz oder aktualisiert einen vorhandenen anhand von Ü
 - Wenn Sie Zweige innerhalb eines Iterators verwenden, stellen Sie sicher, dass sich der letzte Schritt jedes Zweiges mit dem Iterator verbindet, um die Schleife zu schließen.
 </Note>
 
-* Zugriff auf `Aktuelle Item` Felder: Um Felder aus dem aktuell verarbeiteten Datensatz zu verwenden, klicke auf den **Iterator** Schritt, dann wähle **Aktuelles Iterator**. Die Liste der verfügbaren Felder aus diesem Datensatz wird angezeigt und kann für die Verwendung in folgenden Aktionen ausgewählt werden.
+* Zugriff auf `Aktuelle Item` Felder: Um Felder aus dem aktuell verarbeiteten Datensatz zu verwenden, klicke auf den **Iterator** Schritt, dann wähle **Aktuelles Iterator**. Die Liste der verfügbaren Felder aus diesem Datensatz wird angezeigt und kann für die Verwendung in folgenden Aktionen ausgewählt werden. Sie können auch **Use the whole item** auswählen, um das gesamte aktuelle Element an einen nachgelagerten Schritt zu übergeben.
 
 <VimeoEmbed videoId="1146577247" title="Video-Demo" />
 
@@ -181,7 +181,7 @@ Das geplante Datum kann nicht in der Vergangenheit sein. Wenn ein Datumsfeld aus
 ### E-Mail senden
 
 Sendet eine E-Mail aus Ihrem Workflow. Dies ist ideal für vordefinierte Gruppenmails. E-Mails werden so aussehen, wie sie von Ihrem Postfach gesendet werden.
-Nicht geeignet für Newsletter (die eine umfassendere Formatierung erfordern) oder für automatisierte E-Mail-Sequenzen.
+Es eignet sich nicht für Newsletter (die eine umfassendere Formatierung erfordern) oder für automatisierte E-Mail-Sequenzen.
 
 **Voraussetzungen**: Fügen Sie ein E-Mail-Konto unter Einstellungen → Konten hinzu
 
@@ -202,7 +202,7 @@ Im Moment ist nur ein Empfänger möglich.
 </Note>
 
 * Betreffzeile festlegen.
-* Nachrichtentext verfassen. Sie können Links formatieren, nummerierte Liste, Aufzählungspunkte erstellen und Anhänge hinzufügen.
+* Nachrichtentext verfassen. Sie können Links formatieren, nummerierte Listen, Kugelpunktlisten erstellen und Anhänge hinzufügen.
 
 <Note>
 Das Hinzufügen von HTML-Signaturen ist im Moment nicht möglich.
@@ -213,24 +213,24 @@ Das Hinzufügen von HTML-Signaturen ist im Moment nicht möglich.
 Fordert während der Workflow-Ausführung ein Formular an, um Benutzereingaben zu sammeln. Die Antworten können dann in folgenden Schritten verwendet werden, um Datensätze zu erstellen, E-Mails zu senden oder jede andere Aktion basierend auf der Eingabe auszuführen.
 
 <Warning>
-**Formulare sind nur für manuelle Trigger konzipiert**. Bei Workflows mit anderen Triggern (Datensatz erstellt, aktualisiert, etc.) sind Formulare nur über die Workflow-Ausführungsoberfläche zugänglich, was nicht das erwartete Benutzererlebnis ist. Ein Benachrichtigungszentrum wird im Jahr 2026 eingeführt, um die Unterstützung von Formularen in automatisierten Workflows zu verbessern.
+**Formulare sind nur für manuelle Trigger konzipiert**. Bei Workflows mit anderen Triggern (Datensatz erstellt, aktualisiert, etc.) sind Formulare nur über die Workflow-Ausführungsoberfläche zugänglich, was nicht das erwartete Benutzererlebnis ist. 2026 wird ein Benachrichtigungszentrum freigegeben, um Formulare in automatisierten Arbeitsabläufen ordnungsgemäß zu unterstützen.
 </Warning>
 
 **Konfiguration**:
 
 * Konfigurieren Sie die Felder, die Benutzer ausfüllen sollen. Für jedes Feld wählen
-  * ein Typ unter Text, Nummer, Datum, gegebener Datensatz, ein Auswahlfeld. Wählen Sie Felder aus allen Objekten verfügbar.
+  * ein Typ unter Text, Nummer, Datum, gegebener Datensatz, ein Auswahlfeld. Felder aller Objekte stehen zur Auswahl zur Verfügung.
   * ein Label
   * ein Standardwert unter `Platzhalter` (optional)
 * Formulartitel bearbeiten
 
 **Ausgabe**: Formularantworten sind für nachfolgende Schritte verfügbar.
 
-**Beispiel**: Der "Quick Lead"-Workflow ist standardmäßig in allen Arbeitsbereichen verfügbar, die überall im Kommandomenü `Cmd + K` verfügbar sind.
+**Beispiel**: Der "Quick Lead"-Workflow ist standardmäßig in allen Arbeitsbereichen verfügbar, die überall im Kommandomenü `Cmd+K` verfügbar sind.
 
 **So füllen Sie das Formular aus**:
 
-* Löse deinen manuellen Workflow aus dem Kommandomenü `Cmd K` aus
+* Löse deinen manuellen Workflow aus dem Kommandomenü `Cmd+K` aus
 * Füllen Sie das Formular aus, das im Seitenfenster angezeigt wird, und klicken Sie auf "Absenden".
 
 <Note>
@@ -244,6 +244,8 @@ Die Felder können nicht obligatorisch gemacht werden.
 ### Code
 
 Führt benutzerdefiniertes JavaScript in Ihrem Workflow aus.
+
+Im Hintergrund wird jede Code-Aktion von ihrer eigenen **Logikfunktion** unterstützt – einer serverseitigen TypeScript-Funktion, die auf der Twenty-Plattform ausgeführt wird. Wenn Sie eine Code-Aktion hinzufügen, erstellt Twenty eine dedizierte Logikfunktion für diesen Schritt und stellt deren Editor inline bereit, sodass der von Ihnen geschriebene Code zusammen mit dem Workflow gespeichert wird.
 
 **Konfiguration**:
 
@@ -265,6 +267,25 @@ Wenn Sie externe API-Schlüssel in Ihrem Code verwenden müssen, müssen Sie die
 
 <Tip>
 Klicken Sie auf das quadratische Symbol oben rechts im Code-Editor, um es im Vollbildmodus anzuzeigen – hilfreich, da die Standardbreite des Editors begrenzt ist.
+</Tip>
+
+#### Eine Logikfunktion in mehreren Workflows wiederverwenden
+
+Die Inline-Code-Aktion ist ideal für einmalige Logik, aber der darin enthaltene Code gehört zu genau diesem einen Schritt. Wenn Sie dieselbe Logik über mehrere Workflows hinweg teilen oder sie als versionierten Quellcode in einer App pflegen möchten, definieren Sie eine **wiederverwendbare Logikfunktion**, anstatt Code in jede Code-Aktion zu kopieren und einzufügen.
+
+Eine Logikfunktion wird einmal in einer App definiert (mithilfe des SDK-Befehls `defineLogicFunction`) und durch Hinzufügen von `workflowActionTriggerSettings` im Workflow-Builder verfügbar gemacht. Sobald Ihre App installiert ist, erscheint diese Funktion als eigene Aktion im Workflow-Builder, neben den eingebauten Aktionen. Wenn Sie sie auswählen, werden die von Ihnen deklarierten Eingabefelder angezeigt (mit Variablen-Auswahl, genau wie bei anderen Aktionen) und Ihr geteilter Code wird ausgeführt – kein Inline-JavaScript erforderlich.
+
+|                            | Code-Aktion                                                 | Wiederverwendbare Logikfunktion                                    |
+| -------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------ |
+| **Wo der Code liegt**      | Inline-Editor, an einen einzelnen Workflow-Schritt gebunden | In einer App definiert, im Versionskontrollsystem versioniert      |
+| **Wiederverwendung**       | Pro Schritt kopiert und eingefügt                           | Als Aktion in jedem Workflow hinzugefügt                           |
+| **Eingaben**               | Variablen, die im Editor verdrahtet werden                  | Felder, die aus Ihrem deklarierten Eingabe-Schema gerendert werden |
+| **Am besten geeignet für** | Schnelle, Workflow-spezifische Logik                        | Gemeinsam genutzte Logik, die in mehreren Workflows verwendet wird |
+
+Beide laufen auf derselben Logikfunktions-Laufzeit, sodass eine Code-Aktion, die Sie inline prototypisiert haben, später mit minimalen Änderungen in eine wiederverwendbare Logikfunktion überführt werden kann.
+
+<Tip>
+Die entwicklerorientierte Referenz zur Definition von Logikfunktionen und deren Bereitstellung im Workflow-Builder finden Sie unter [Logic Functions](/l/de/developers/extend/apps/logic/logic-functions) – insbesondere im Abschnitt **Exposing a function as an AI tool or workflow action** und bei `workflowActionTriggerSettings`.
 </Tip>
 
 ### HTTP-Anfrage

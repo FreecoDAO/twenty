@@ -35,10 +35,6 @@ import { Button, type SelectOption } from 'twenty-ui/input';
 import { MenuItem } from 'twenty-ui/navigation';
 import { useNavigateSettings } from '~/hooks/useNavigateSettings';
 
-const EMAIL_EDITOR_MIN_HEIGHT = 340;
-
-const EMAIL_EDITOR_MAX_WIDTH = 600;
-
 type WorkflowEditActionEmailBaseProps = {
   action: WorkflowEmailAction;
   actionOptions:
@@ -121,9 +117,6 @@ export const WorkflowEditActionEmailBase = ({
   const { accounts: myAccounts, loading: myAccountsLoading } =
     useMyConnectedAccounts();
 
-  // Sender variables are only enabled for DRAFT_EMAIL for now; SEND_EMAIL keeps a plain account select.
-  const isSenderVariableEnabled = action.type === 'DRAFT_EMAIL';
-
   const configuredAccountId = formData.connectedAccountId;
   const isSenderVariable = isStandaloneVariableString(configuredAccountId);
   const isConfiguredAccountMine = myAccounts.some(
@@ -205,17 +198,11 @@ export const WorkflowEditActionEmailBase = ({
           <FormSelectFieldInput
             key={`connected-account-${formData.connectedAccountId ?? 'none'}`}
             label={t`Account`}
-            hint={
-              isSenderVariableEnabled
-                ? t`Pick a connected account or set a workspace member as variable`
-                : undefined
-            }
+            hint={t`Pick a connected account or set a workspace member as variable`}
             defaultValue={formData.connectedAccountId}
             options={connectedAccountOptions}
             onChange={handleConnectedAccountChange}
-            VariablePicker={
-              isSenderVariableEnabled ? WorkflowVariablePicker : undefined
-            }
+            VariablePicker={WorkflowVariablePicker}
             readonly={actionOptions.readonly}
             callToActionButton={{
               onClick: () => {
@@ -384,8 +371,7 @@ export const WorkflowEditActionEmailBase = ({
                 children: t`Email Editor`,
               },
             ]}
-            minHeight={EMAIL_EDITOR_MIN_HEIGHT}
-            maxWidth={EMAIL_EDITOR_MAX_WIDTH}
+            preset="workflowEmailBody"
           />
           <WorkflowSendEmailAttachments
             label={t`Attachments`}

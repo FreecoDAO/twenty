@@ -49,6 +49,7 @@ export const mockedClientConfig: ClientConfig = {
     inviteTeamMaxCreditsReward: 9,
     inviteTeamCreditsRewardPerUser: 3,
     upgradeCreditsReward: 5,
+    installAppsCreditsRewardPerApp: 1,
   },
   canManageFeatureFlags: true,
   publicFeatureFlags: [],
@@ -65,4 +66,5 @@ export const mockedClientConfig: ClientConfig = {
   isCloudflareIntegrationEnabled: false,
   isClickHouseConfigured: false,
   isWorkspaceSchemaDDLLocked: false,
+  isOnboardingAiChatEnabled: false,
 };
