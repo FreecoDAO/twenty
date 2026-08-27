@@ -3,8 +3,7 @@ import {
   STANDARD_PAGE_LAYOUT_UNIVERSAL_IDENTIFIERS,
 } from 'twenty-shared/metadata';
 
-import { WidgetType } from 'src/engine/metadata-modules/page-layout-widget/enums/widget-type.enum';
-import { PageLayoutType } from 'src/engine/metadata-modules/page-layout/enums/page-layout-type.enum';
+import { PageLayoutType, WidgetType } from 'twenty-shared/types';
 import {
   GRID_POSITIONS,
   TAB_PROPS,
@@ -23,27 +22,6 @@ const MESSAGE_CAMPAIGN_PAGE_TABS = {
         .home.universalIdentifier,
     ...TAB_PROPS.home,
     widgets: {
-      details: {
-        universalIdentifier:
-          STANDARD_PAGE_LAYOUT_UNIVERSAL_IDENTIFIERS.messageCampaignRecordPage
-            .tabs.home.widgets.details.universalIdentifier,
-        ...WIDGET_PROPS.messageCampaignDetails,
-        conditionalAvailabilityExpression:
-          'everyEquals(selectedRecords, "status", "DRAFT")',
-      },
-      list: {
-        universalIdentifier:
-          STANDARD_PAGE_LAYOUT_UNIVERSAL_IDENTIFIERS.messageCampaignRecordPage
-            .tabs.home.widgets.list.universalIdentifier,
-        title: 'List',
-        type: WidgetType.FIELD,
-        gridPosition: GRID_POSITIONS.FULL_WIDTH,
-        position: VERTICAL_LIST_LAYOUT_POSITIONS.THIRD,
-        fieldUniversalIdentifier:
-          STANDARD_OBJECTS.messageCampaign.fields.list.universalIdentifier,
-        conditionalAvailabilityExpression:
-          'not everyEquals(selectedRecords, "status", "DRAFT")',
-      },
       recipients: {
         universalIdentifier:
           STANDARD_PAGE_LAYOUT_UNIVERSAL_IDENTIFIERS.messageCampaignRecordPage
@@ -56,7 +34,7 @@ const MESSAGE_CAMPAIGN_PAGE_TABS = {
           STANDARD_OBJECTS.messageCampaign.fields.recipients
             .universalIdentifier,
         conditionalAvailabilityExpression:
-          'not everyEquals(selectedRecords, "status", "DRAFT")',
+          'noneEquals(selectedRecords, "status", "DRAFT")',
       },
       fields: {
         universalIdentifier:
@@ -65,7 +43,7 @@ const MESSAGE_CAMPAIGN_PAGE_TABS = {
         ...WIDGET_PROPS.fields,
         position: VERTICAL_LIST_LAYOUT_POSITIONS.SECOND,
         conditionalAvailabilityExpression:
-          'not everyEquals(selectedRecords, "status", "DRAFT")',
+          'noneEquals(selectedRecords, "status", "DRAFT")',
       },
     },
   },

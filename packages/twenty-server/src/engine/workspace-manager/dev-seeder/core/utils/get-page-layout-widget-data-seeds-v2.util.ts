@@ -3,6 +3,7 @@ import { STANDARD_OBJECTS } from 'twenty-shared/metadata';
 import {
   AggregateOperations,
   PageLayoutTabLayoutMode,
+  WidgetType,
 } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
 
@@ -10,7 +11,6 @@ import { type ObjectMetadataEntity } from 'src/engine/metadata-modules/object-me
 import { AxisNameDisplay } from 'src/engine/metadata-modules/page-layout-widget/enums/axis-name-display.enum';
 import { GraphOrderBy } from 'src/engine/metadata-modules/page-layout-widget/enums/graph-order-by.enum';
 import { WidgetConfigurationType } from 'src/engine/metadata-modules/page-layout-widget/enums/widget-configuration-type.type';
-import { WidgetType } from 'src/engine/metadata-modules/page-layout-widget/enums/widget-type.enum';
 import { PAGE_LAYOUT_TAB_SEEDS } from 'src/engine/workspace-manager/dev-seeder/core/constants/page-layout-tab-seeds.constant';
 import { PAGE_LAYOUT_WIDGET_SEEDS } from 'src/engine/workspace-manager/dev-seeder/core/constants/page-layout-widget-seeds.constant';
 import { type SeederFlatPageLayoutWidget } from 'src/engine/workspace-manager/dev-seeder/core/types/seeder-flat-page-layout-widget.type';
@@ -60,7 +60,6 @@ export const getPageLayoutWidgetDataSeedsV2 = (
   const personJobTitleFieldId = getFieldId(personObject, 'jobTitle');
 
   return [
-    // LINE chart: Revenue Forecast (Sales Overview)
     isDefined(opportunityAmountFieldId) &&
     isDefined(opportunityCloseDateFieldId)
       ? ({
@@ -98,7 +97,6 @@ export const getPageLayoutWidgetDataSeedsV2 = (
         } satisfies SeederFlatPageLayoutWidget)
       : null,
 
-    // LINE chart: New Customers Over Time (Customer Overview)
     isDefined(companyIdFieldId) && isDefined(companyCreatedAtFieldId)
       ? ({
           id: generateSeedId(
@@ -135,7 +133,6 @@ export const getPageLayoutWidgetDataSeedsV2 = (
         } satisfies SeederFlatPageLayoutWidget)
       : null,
 
-    // PIE chart: Revenue Distribution (Customer Analytics)
     isDefined(companyAnnualRevenueFieldId) && isDefined(companyNameFieldId)
       ? ({
           id: generateSeedId(
@@ -171,7 +168,6 @@ export const getPageLayoutWidgetDataSeedsV2 = (
         } satisfies SeederFlatPageLayoutWidget)
       : null,
 
-    // PIE chart: Companies by LinkedIn (Customer Overview)
     isDefined(companyIdFieldId) && isDefined(companyLinkedinLinkFieldId)
       ? ({
           id: generateSeedId(
@@ -208,7 +204,6 @@ export const getPageLayoutWidgetDataSeedsV2 = (
         } satisfies SeederFlatPageLayoutWidget)
       : null,
 
-    // PIE chart: Contact Roles (Team Metrics)
     isDefined(personIdFieldId) && isDefined(personJobTitleFieldId)
       ? ({
           id: generateSeedId(

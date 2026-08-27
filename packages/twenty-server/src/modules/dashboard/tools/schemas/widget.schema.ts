@@ -3,6 +3,7 @@ import {
   AggregateOperations,
   ObjectRecordGroupByDateGranularity,
   ViewFilterOperand,
+  WidgetType,
 } from 'twenty-shared/types';
 import { z } from 'zod';
 
@@ -12,7 +13,6 @@ import { BarChartLayout } from 'src/engine/metadata-modules/page-layout-widget/e
 import { ChartNumberFormat } from 'src/engine/metadata-modules/page-layout-widget/enums/chart-number-format.enum';
 import { GraphOrderBy } from 'src/engine/metadata-modules/page-layout-widget/enums/graph-order-by.enum';
 import { WidgetConfigurationType } from 'src/engine/metadata-modules/page-layout-widget/enums/widget-configuration-type.type';
-import { WidgetType } from 'src/engine/metadata-modules/page-layout-widget/enums/widget-type.enum';
 
 // Chart color options (MAIN_COLOR_NAMES plus 'auto').
 // should we export MAIN_COLOR_NAMES from twenty-ui to twenty-shared and use that here?
@@ -293,7 +293,6 @@ export const widgetTypeSchema = z.enum([
   WidgetType.RECORD_TABLE,
 ]);
 
-// Graph configuration schema for AGGREGATE type (KPI numbers)
 const aggregateChartConfigSchemaBase = z.object({
   configurationType: z.literal(WidgetConfigurationType.AGGREGATE_CHART),
   aggregateFieldMetadataId: z
@@ -332,7 +331,6 @@ const aggregateChartConfigSchema = aggregateChartConfigSchemaBase.extend({
 const aggregateChartConfigSchemaWithoutDefaults =
   aggregateChartConfigSchemaBase;
 
-// Graph configuration schema for BAR charts
 const barChartConfigSchemaCore = z.object({
   configurationType: z.literal(WidgetConfigurationType.BAR_CHART),
   aggregateFieldMetadataId: z
@@ -424,7 +422,6 @@ const barChartConfigSchema = withRangeMinMaxRefinement(
   ),
 );
 
-// Graph configuration schema for LINE charts
 const lineChartConfigSchemaCore = z.object({
   configurationType: z.literal(WidgetConfigurationType.LINE_CHART),
   aggregateFieldMetadataId: z
@@ -510,7 +507,6 @@ const lineChartConfigSchema = withRangeMinMaxRefinement(
   ),
 );
 
-// Graph configuration schema for PIE charts
 const pieChartConfigSchemaCore = z.object({
   configurationType: z.literal(WidgetConfigurationType.PIE_CHART),
   aggregateFieldMetadataId: z
@@ -568,7 +564,6 @@ const pieChartConfigSchema = withManualSortRefinement(
   }),
 );
 
-// Record table configuration
 const recordTableConfigSchema = z.object({
   configurationType: z.literal(WidgetConfigurationType.RECORD_TABLE),
   viewId: z
@@ -584,13 +579,11 @@ const recordTableConfigSchema = z.object({
     .describe('Maximum number of records displayed in the table widget.'),
 });
 
-// Iframe configuration
 const iframeConfigSchema = z.object({
   configurationType: z.literal(WidgetConfigurationType.IFRAME),
   url: z.string().url().optional().describe('URL to embed'),
 });
 
-// Rich text configuration
 const richTextConfigSchema = z.object({
   configurationType: z.literal(WidgetConfigurationType.STANDALONE_RICH_TEXT),
   body: z
@@ -661,5 +654,4 @@ export const widgetConfigurationSchemaWithoutDefaults = z
   .optional()
   .describe('Widget configuration - structure depends on widget type');
 
-// Export enums for documentation
 export { AggregateOperations, WidgetConfigurationType };

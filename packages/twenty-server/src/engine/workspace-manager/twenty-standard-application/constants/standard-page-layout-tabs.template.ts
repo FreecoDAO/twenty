@@ -1,12 +1,11 @@
 import {
-  PageLayoutTabLayoutMode,
   type GridPosition,
+  PageLayoutTabLayoutMode,
   type PageLayoutWidgetConditionalDisplay,
   type PageLayoutWidgetGridPosition,
   type PageLayoutWidgetVerticalListPosition,
+  WidgetType,
 } from 'twenty-shared/types';
-
-import { WidgetType } from 'src/engine/metadata-modules/page-layout-widget/enums/widget-type.enum';
 
 export const CONDITIONAL_DISPLAY_DEVICE_MOBILE = {
   and: [{ '===': [{ var: 'device' }, 'MOBILE'] }],
@@ -224,12 +223,6 @@ export const WIDGET_PROPS = {
     title: 'Email',
     type: WidgetType.MESSAGE_CAMPAIGN_BODY,
     gridPosition: GRID_POSITIONS.RICH_TEXT,
-    position: VERTICAL_LIST_LAYOUT_POSITIONS.FIRST,
-  },
-  messageCampaignDetails: {
-    title: 'Details',
-    type: WidgetType.MESSAGE_CAMPAIGN_DETAILS,
-    gridPosition: GRID_POSITIONS.FULL_WIDTH,
     position: VERTICAL_LIST_LAYOUT_POSITIONS.FIRST,
   },
   workflowVersion: {
